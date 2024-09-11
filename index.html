@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generative AI Prompts</title>
+    <style>
+        .prompt {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .prompt-text {
+            margin-right: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Generative AI Prompts</h1>
+    <div id="prompts">
+        <!-- Prompts will be listed here -->
+    </div>
+
+    <script>
+        const prompts = [
+            "Write a poem about the ocean.",
+            "Describe a futuristic city.",
+            "Generate a story about a hero on a quest."
+        ];
+
+        const promptContainer = document.getElementById('prompts');
+
+        prompts.forEach(prompt => {
+            const promptDiv = document.createElement('div');
+            promptDiv.className = 'prompt';
+
+            const promptText = document.createElement('span');
+            promptText.className = 'prompt-text';
+            promptText.textContent = prompt;
+
+            const copyButton = document.createElement('button');
+            copyButton.textContent = 'Copy';
+            copyButton.onclick = () => {
+                navigator.clipboard.writeText(prompt)
+                    .then(() => alert('Prompt copied to clipboard!'))
+                    .catch(err => console.error('Failed to copy: ', err));
+            };
+
+            promptDiv.appendChild(promptText);
+            promptDiv.appendChild(copyButton);
+            promptContainer.appendChild(promptDiv);
+        });
+    </script>
+</body>
+</html>
