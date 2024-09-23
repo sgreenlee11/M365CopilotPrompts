@@ -110,7 +110,7 @@
     </main>
     <div id="notification"></div>
     <footer>
-        <p>Copilot for Microsoft 365 Prompts</p>
+        <p>&copy; 2023 Your Company Name</p>
     </footer>
     <script>
         const prompts = [
