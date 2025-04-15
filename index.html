@@ -2,162 +2,258 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Copilot for Microsoft 365 Prompts</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600&display=swap" rel="stylesheet">
-    <!-- Font Awesome for Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <title>Real-Time Weather Heatmap</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
     <style>
-        /* CSS Reset */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
         body {
-            font-family: 'Open Sans', sans-serif;
-            background-color: #f9f9f9;
-            color: #333;
+            background-color: #121212;
+            color: white;
+            font-family: Arial, sans-serif;
         }
-
-        header {
-            background-color: #1E90FF;
-            padding: 20px;
-            text-align: center;
+        #map {
+            height: 600px;
+            width: 100%;
         }
-
-        header h1 {
-            color: #fff;
-            font-weight: 600;
-            font-size: 2.5em;
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
         }
-
-        main {
-            padding: 20px;
-            max-width: 800px;
-            margin: 0 auto;
+        th, td {
+            border: 1px solid #444;
+            padding: 8px;
+            text-align: left;
         }
-
-        .card {
-            background-color: #fff;
-            border-radius: 8px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            margin-bottom: 20px;
-            padding: 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            transition: box-shadow 0.3s;
-        }
-
-        .card:hover {
-            box-shadow: 0 6px 8px rgba(0,0,0,0.15);
-        }
-
-        .prompt-text {
-            font-size: 1.1em;
-            flex-grow: 1;
-            margin-right: 20px;
-            word-break: break-word;
-        }
-
-        button {
-            padding: 10px 15px;
-            border: none;
-            background-color: #1E90FF;
-            color: #fff;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 1em;
-            transition: background-color 0.3s;
-        }
-
-        button:hover {
-            background-color: #1C86EE;
-        }
-
-        footer {
-            background-color: #1E90FF;
-            color: #fff;
-            text-align: center;
-            padding: 10px;
-        }
-
-        #notification {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            background-color: #1E90FF;
-            color: #fff;
-            padding: 10px 20px;
-            border-radius: 5px;
-            display: none;
-            z-index: 1000;
-            opacity: 0;
+        th {
+            background-color: #333;
         }
     </style>
 </head>
 <body>
-    <header>
-        <h1>Copilot for Microsoft 365 Prompts</h1>
-    </header>
-    <main>
-        <div id="prompts">
-            <!-- Prompts will be listed here -->
-        </div>
-    </main>
-    <div id="notification"></div>
-    <footer>
-        <p>Copilot for Microsoft 365 Prompts</p>
-    </footer>
+    <h1>Real-Time Weather Heatmap</h1>
+    <div id="map"></div>
+    <table>
+        <thead>
+            <tr>
+                <th>City</th>
+                <th>State</th>
+                <th>Current Temperature (°F)</th>
+                <th>Humidity (%)</th>
+                <th>Distance from Comfort (°F)</th>
+            </tr>
+        </thead>
+        <tbody id="weather-table">
+            <!-- Data will be inserted here -->
+        </tbody>
+    </table>
+
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet.heat/dist/leaflet-heat.js"></script>
     <script>
-        const prompts = [
-            "Provide a summary of /",
-            "What's the latest from /, organized by emails chats and files?",
-            "Write a blog post about sustainable practices in agriculture.",
-            "Craft a 1500-word blog post for a general audience interested in sustainability, focusing on the significance and benefits of sustainable agricultural practices like organic farming and agroforestry. Include real-world examples, innovative technologies, and insights from reputable sources. Conclude with a reflection on the importance of these practices and a call for collective efforts to embrace them"
+        const cities = [
+            // Add the top 100 U.S. cities with their coordinates here
+            { name: "New York", state: "NY", lat: 40.7128, lon: -74.0060 },
+            { name: "New York", state: "NY", lat: 40.7128, lon: -74.0060 },
+{ name: "Los Angeles", state: "CA", lat: 34.0522, lon: -118.2437 },
+{ name: "Chicago", state: "IL", lat: 41.8781, lon: -87.6298 },
+{ name: "Houston", state: "TX", lat: 29.7604, lon: -95.3698 },
+{ name: "Phoenix", state: "AZ", lat: 33.4484, lon: -112.0740 },
+{ name: "Philadelphia", state: "PA", lat: 39.9526, lon: -75.1652 },
+{ name: "San Antonio", state: "TX", lat: 29.4241, lon: -98.4936 },
+{ name: "San Diego", state: "CA", lat: 32.7157, lon: -117.1611 },
+{ name: "Dallas", state: "TX", lat: 32.7767, lon: -96.7970 },
+{ name: "San Jose", state: "CA", lat: 37.3382, lon: -121.8863 },
+{ name: "Austin", state: "TX", lat: 30.2672, lon: -97.7431 },
+{ name: "Jacksonville", state: "FL", lat: 30.3322, lon: -81.6557 },
+{ name: "Fort Worth", state: "TX", lat: 32.7555, lon: -97.3308 },
+{ name: "Columbus", state: "OH", lat: 39.9612, lon: -82.9988 },
+{ name: "Charlotte", state: "NC", lat: 35.2271, lon: -80.8431 },
+{ name: "San Francisco", state: "CA", lat: 37.7749, lon: -122.4194 },
+{ name: "Indianapolis", state: "IN", lat: 39.7684, lon: -86.1581 },
+{ name: "Seattle", state: "WA", lat: 47.6062, lon: -122.3321 },
+{ name: "Denver", state: "CO", lat: 39.7392, lon: -104.9903 },
+{ name: "Washington", state: "DC", lat: 38.9072, lon: -77.0369 },
+{ name: "Boston", state: "MA", lat: 42.3601, lon: -71.0589 },
+{ name: "El Paso", state: "TX", lat: 31.7619, lon: -106.4850 },
+{ name: "Nashville", state: "TN", lat: 36.1627, lon: -86.7816 },
+{ name: "Detroit", state: "MI", lat: 42.3314, lon: -83.0458 },
+{ name: "Oklahoma City", state: "OK", lat: 35.4676, lon: -97.5164 },
+{ name: "Portland", state: "OR", lat: 45.5051, lon: -122.6750 },
+{ name: "Las Vegas", state: "NV", lat: 36.1699, lon: -115.1398 },
+{ name: "Memphis", state: "TN", lat: 35.1495, lon: -90.0490 },
+{ name: "Louisville", state: "KY", lat: 38.2527, lon: -85.7585 },
+{ name: "Baltimore", state: "MD", lat: 39.2904, lon: -76.6122 },
+{ name: "Milwaukee", state: "WI", lat: 43.0389, lon: -87.9065 },
+{ name: "Albuquerque", state: "NM", lat: 35.0844, lon: -106.6504 },
+{ name: "Tucson", state: "AZ", lat: 32.2226, lon: -110.9747 },
+{ name: "Fresno", state: "CA", lat: 36.7378, lon: -119.7871 },
+{ name: "Mesa", state: "AZ", lat: 33.4152, lon: -111.8315 },
+{ name: "Sacramento", state: "CA", lat: 38.5816, lon: -121.4944 },
+{ name: "Atlanta", state: "GA", lat: 33.7490, lon: -84.3880 },
+{ name: "Kansas City", state: "MO", lat: 39.0997, lon: -94.5786 },
+{ name: "Colorado Springs", state: "CO", lat: 38.8339, lon: -104.8214 },
+{ name: "Miami", state: "FL", lat: 25.7617, lon: -80.1918 },
+{ name: "Raleigh", state: "NC", lat: 35.7796, lon: -78.6382 },
+{ name: "Omaha", state: "NE", lat: 41.2565, lon: -95.9345 },
+{ name: "Long Beach", state: "CA", lat: 33.7701, lon: -118.1937 },
+{ name: "Virginia Beach", state: "VA", lat: 36.8529, lon: -75.9780 },
+{ name: "Oakland", state: "CA", lat: 37.8044, lon: -122.2711 },
+{ name: "Minneapolis", state: "MN", lat: 44.9778, lon: -93.2650 },
+{ name: "Tulsa", state: "OK", lat: 36.1539, lon: -95.9928 },
+{ name: "Arlington", state: "TX", lat: 32.7357, lon: -97.1081 },
+{ name: "New Orleans", state: "LA", lat: 29.9511, lon: -90.0715 },
+{ name: "Wichita", state: "KS", lat: 37.6872, lon: -97.3301 },
+{ name: "Cleveland", state: "OH", lat: 41.4993, lon: -81.6944 },
+{ name: "Tampa", state: "FL", lat: 27.9506, lon: -82.4572 },
+{ name: "Bakersfield", state: "CA", lat: 35.3733, lon: -119.0187 },
+{ name: "Aurora", state: "CO", lat: 39.7294, lon: -104.8319 },
+{ name: "Anaheim", state: "CA", lat: 33.8366, lon: -117.9143 },
+{ name: "Honolulu", state: "HI", lat: 21.3069, lon: -157.8583 },
+{ name: "Santa Ana", state: "CA", lat: 33.7455, lon: -117.8677 },
+{ name: "Riverside", state: "CA", lat: 33.9806, lon: -117.3755 },
+{ name: "Corpus Christi", state: "TX", lat: 27.8006, lon: -97.3964 },
+{ name: "Lexington", state: "KY", lat: 38.0406, lon: -84.5037 },
+{ name: "Henderson", state: "NV", lat: 36.0395, lon: -114.9817 },
+{ name: "Stockton", state: "CA", lat: 37.9577, lon: -121.2908 },
+{ name: "Saint Paul", state: "MN", lat: 44.9537, lon: -93.0900 },
+{ name: "Cincinnati", state: "OH", lat: 39.1031, lon: -84.5120 },
+{ name: "St. Louis", state: "MO", lat: 38.6270, lon: -90.1994 },
+{ name: "Pittsburgh", state: "PA", lat: 40.4406, lon: -79.9959 },
+{ name: "Greensboro", state: "NC", lat: 36.0726, lon: -79.7920 },
+{ name: "Lincoln", state: "NE", lat: 40.8136, lon: -96.7026 },
+{ name: "Anchorage", state: "AK", lat: 61.2181, lon: -149.9003 },
+{ name: "Plano", state: "TX", lat: 33.0198, lon: -96.6989 },
+{ name: "Orlando", state: "FL", lat: 28.5383, lon: -81.3792 },
+{ name: "Irvine", state: "CA", lat: 33.6846, lon: -117.8265 },
+{ name: "Newark", state: "NJ", lat: 40.7357, lon: -74.1724 },
+{ name: "Durham", state: "NC", lat: 35.9940, lon: -78.8986 },
+{ name: "Chula Vista", state: "CA", lat: 32.6401, lon: -117.0842 },
+{ name: "Toledo", state: "OH", lat: 41.6528, lon: -83.5379 },
+{ name: "Fort Wayne", state: "IN", lat: 41.0793, lon: -85.1394 },
+{ name: "St. Petersburg", state: "FL", lat: 27.7676, lon: -82.6403 },
+{ name: "Laredo", state: "TX", lat: 27.5306, lon: -99.4803 },
+{ name: "Jersey City", state: "NJ", lat: 40.7178, lon: -74.0431 },
+{ name: "Chandler", state: "AZ", lat: 33.3062, lon: -111.8413 },
+{ name: "Madison", state: "WI", lat: 43.0731, lon: -89.4012 },
+{ name: "Lubbock", state: "TX", lat: 33.5779, lon: -101.8552 },
+{ name: "Scottsdale", state: "AZ", lat: 33.4942, lon: -111.9261 },
+{ name: "Reno", state: "NV", lat: 39.5296, lon: -119.8138 },
+{ name: "Buffalo", state: "NY", lat: 42.8864, lon: -78.8784 },
+{ name: "Gilbert", state: "AZ", lat: 33.3528, lon: -111.7890 },
+{ name: "Glendale", state: "AZ", lat: 33.5387, lon: -112.1860 },
+{ name: "North Las Vegas", state: "NV", lat: 36.1989, lon: -115.1175 },
+{ name: "Winston-Salem", state: "NC", lat: 36.0999, lon: -80.2442 },
+{ name: "Chesapeake", state: "VA", lat: 36.7682, lon: -76.2875 },
+{ name: "Norfolk", state: "VA", lat: 36.8508, lon: -76.2859 },
+{ name: "Fremont", state: "CA", lat: 37.5483, lon: -121.9886 },
+{ name: "Garland", state: "TX", lat: 32.9126, lon: -96.6389 },
+{ name: "Irving", state: "TX", lat: 32.8140, lon: -96.9489 },
+{ name: "Hialeah", state: "FL", lat: 25.8576, lon: -80.2781 },
+{ name: "Richmond", state: "VA", lat: 37.5407, lon: -77.4360 },
+{ name: "Boise", state: "ID", lat: 43.6150, lon: -116.2023 },
+{ name: "Spokane", state: "WA", lat: 47.6588, lon: -117.4260 },
+{ name: "Baton Rouge", state: "LA", lat: 30.4515, lon: -91.1871 },
+{ name: "Tacoma", state: "WA", lat: 47.2529, lon: -122.4443 },
+{ name: "San Bernardino", state: "CA", lat: 34.1083, lon: -117.2898 },
+{ name: "Modesto", state: "CA", lat: 37.6391, lon: -120.9969 },
+{ name: "Fontana", state: "CA", lat: 34.0922, lon: -117.4350 },
+{ name: "Des Moines", state: "IA", lat: 41.5868, lon: -93.6250 },
+{ name: "Moreno Valley", state: "CA", lat: 33.9425, lon: -117.2297 },
+{ name: "Santa Clarita", state: "CA", lat: 34.3917, lon: -118.5426 },
+{ name: "Fayetteville", state: "NC", lat: 35.0527, lon: -78.8784 },
+{ name: "Birmingham", state: "AL", lat: 33.5186, lon: -86.8104 },
+{ name: "Oxnard", state: "CA", lat: 34.1975, lon: -119.1771 },
+{ name: "Rochester", state: "NY", lat: 43.1566, lon: -77.6088 },
+{ name: "Port St. Lucie", state: "FL", lat: 27.2730, lon: -80.3582 },
+{ name: "Grand Rapids", state: "MI", lat: 42.9634, lon: -85.6681 },
+{ name: "Huntsville", state: "AL", lat: 34.7304, lon: -86.5861 },
+{ name: "Salt Lake City", state: "UT", lat: 40.7608, lon: -111.8910 },
+{ name: "Frisco", state: "TX", lat: 33.1507, lon: -96.8236 },
+{ name: "Yonkers", state: "NY", lat: 40.9312, lon: -73.8988 },
+{ name: "Amarillo", state: "TX", lat: 35.2219, lon: -101.8313 },
+{ name: "Glendale", state: "CA", lat: 34.1425, lon: -118.2551 },
+{ name: "Huntington Beach", state: "CA", lat: 33.6595, lon: -117.9988 },
+{ name: "McKinney", state: "TX", lat: 33.1976, lon: -96.6398 },
+{ name: "Montgomery", state: "AL", lat: 32.3792, lon: -86.3077 },
+{ name: "Augusta", state: "GA", lat: 33.4735, lon: -82.0105 },
+{ name: "Aurora", state: "IL", lat: 41.7606, lon: -88.3201 },
+{ name: "Akron", state: "OH", lat: 41.0814, lon: -81.5190 },
+{ name: "Little Rock", state: "AR", lat: 34.7465, lon: -92.2896 },
+{ name: "Tempe", state: "AZ", lat: 33.4255, lon: -111.9400 },
+{ name: "Columbus", state: "GA", lat: 32.4609, lon: -84.9877 },
+{ name: "Overland Park", state: "KS", lat: 38.9822, lon: -94.6708 },
+{ name: "Grand Prairie", state: "TX", lat: 32.7459, lon: -96.9978 },
+{ name: "Tallahassee", state: "FL", lat: 30.4383, lon: -84.2807 },
+{ name: "Cape Coral", state: "FL", lat: 26.5629, lon: -81.9495 },
+{ name: "Mobile", state: "AL", lat: 30.6954, lon: -88.0399 },
+{ name: "Knoxville", state: "TN", lat: 35.9606, lon: -83.9207 },
+{ name: "Shreveport", state: "LA", lat: 32.5252, lon: -93.7502 },
+{ name: "Worcester", state: "MA", lat: 42.2626, lon: -71.8023 },
+{ name: "Ontario", state: "CA", lat: 34.0633, lon: -117.6509 },
+{ name: "Vancouver", state: "WA", lat: 45.6387, lon: -122.6615 },
+{ name: "Sioux Falls", state: "SD", lat: 43.5446, lon: -96.7311 },
+{ name: "Chattanooga", state: "TN", lat: 35.0456, lon: -85.3097 },
+{ name: "Brownsville", state: "TX", lat: 25.9017, lon: -97.4975 },
+{ name: "Fort Lauderdale", state: "FL", lat: 26.1224, lon: -80.1373 },
+{ name: "Providence", state: "RI", lat: 41.8240, lon: -71.4128 },
+{ name: "Newport News", state: "VA", lat: 37.0871, lon: -76.4730 }
+            // ... more cities
         ];
 
-        const promptContainer = document.getElementById('prompts');
+        const map = L.map('map').setView([37.8, -96], 4);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+        }).addTo(map);
 
-        function showNotification(message) {
-            const notification = document.getElementById('notification');
-            notification.textContent = message;
-            notification.style.display = 'block';
-            notification.style.opacity = '1';
+        const heat = L.heatLayer([], {
+            radius: 25,
+            blur: 15,
+            maxZoom: 10,
+            gradient: {0.4: 'blue', 0.65: 'lime', 1: 'red'},
+            opacity: 0.8
+        }).addTo(map);
 
-            setTimeout(() => {
-                notification.style.transition = 'opacity 0.5s';
-                notification.style.opacity = '0';
-                setTimeout(() => {
-                    notification.style.display = 'none';
-                    notification.style.transition = '';
-                }, 500);
-            }, 2000);
-        }
+        const apiKey = '6ebf4338750ead052b6bf9d66fbf0b3b';
+        const comfortTemp = (met, clo, airVelocity) => {
+            // Implement the CBE Comfort Tool's equation here
+            return 72; // Placeholder value
+        };
 
-        prompts.forEach(prompt => {
-            const card = document.createElement('div');
-            card.className = 'card';
+        const updateWeatherData = async () => {
+            const heatData = [];
+            const tableBody = document.getElementById('weather-table');
+            tableBody.innerHTML = '';
 
-            const promptText = document.createElement('div');
-            promptText.className = 'prompt-text';
-            promptText.textContent = prompt;
+            for (const city of cities) {
+                try {
+                    const response = await fetch(`https://api.openweathermap.org/data/2.5/weather?lat=${city.lat}&lon=${city.lon}&units=imperial&appid=${apiKey}`);
+                    const data = await response.json();
+                    const temp = data.main.temp;
+                    const humidity = data.main.humidity;
+                    const distanceFromComfort = Math.abs(temp - comfortTemp(2, 0.57, 0.447));
 
-            const copyButton = document.createElement('button');
-            copyButton.innerHTML = '<i class="fas fa-copy"></i> Copy';
-            copyButton.onclick = () => {
-                navigator.clipboard.writeText(prompt)
-                    .then(() => showNotification('Prompt copied to clipboard!'))
-                    .catch(err => console.error('Failed to copy: ', err));
-            };
+                    heatData.push([city.lat, city.lon, distanceFromComfort]);
 
-            card.appendChild(promptText);
-            card.appendChild(copyButton);
-            promptContainer.appendChild(card);
-        });
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${city.name}</td>
+                        <td>${city.state}</td>
+                        <td>${temp.toFixed(1)}</td>
+                        <td>${humidity}</td>
+                        <td>${distanceFromComfort.toFixed(1)}</td>
+                    `;
+                    tableBody.appendChild(row);
+                } catch (error) {
+                    console.error(`Error fetching weather data for ${city.name}:`, error);
+                }
+            }
+
+            heat.setLatLngs(heatData);
+        };
+
+        updateWeatherData();
+        setInterval(updateWeatherData, 600000); // Update every 10 minutes
     </script>
 </body>
 </html>

@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Copilot for Microsoft 365 Prompts</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600&display=swap" rel="stylesheet">
+    <!-- Font Awesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* CSS Reset */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Open Sans', sans-serif;
+            background-color: #f9f9f9;
+            color: #333;
+        }
+
+        header {
+            background-color: #1E90FF;
+            padding: 20px;
+            text-align: center;
+        }
+
+        header h1 {
+            color: #fff;
+            font-weight: 600;
+            font-size: 2.5em;
+        }
+
+        main {
+            padding: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .card {
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: box-shadow 0.3s;
+        }
+
+        .card:hover {
+            box-shadow: 0 6px 8px rgba(0,0,0,0.15);
+        }
+
+        .prompt-text {
+            font-size: 1.1em;
+            flex-grow: 1;
+            margin-right: 20px;
+            word-break: break-word;
+        }
+
+        button {
+            padding: 10px 15px;
+            border: none;
+            background-color: #1E90FF;
+            color: #fff;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #1C86EE;
+        }
+
+        footer {
+            background-color: #1E90FF;
+            color: #fff;
+            text-align: center;
+            padding: 10px;
+        }
+
+        #notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background-color: #1E90FF;
+            color: #fff;
+            padding: 10px 20px;
+            border-radius: 5px;
+            display: none;
+            z-index: 1000;
+            opacity: 0;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Copilot for Microsoft 365 Prompts</h1>
+    </header>
+    <main>
+        <div id="prompts">
+            <!-- Prompts will be listed here -->
+        </div>
+    </main>
+    <div id="notification"></div>
+    <footer>
+        <p>Copilot for Microsoft 365 Prompts</p>
+    </footer>
+    <script>
+        const prompts = [
+            "Provide a summary of /",
+            "What's the latest from /, organized by emails chats and files?",
+            "Write a blog post about sustainable practices in agriculture.",
+            "Craft a 1500-word blog post for a general audience interested in sustainability, focusing on the significance and benefits of sustainable agricultural practices like organic farming and agroforestry. Include real-world examples, innovative technologies, and insights from reputable sources. Conclude with a reflection on the importance of these practices and a call for collective efforts to embrace them"
+        ];
+
+        const promptContainer = document.getElementById('prompts');
+
+        function showNotification(message) {
+            const notification = document.getElementById('notification');
+            notification.textContent = message;
+            notification.style.display = 'block';
+            notification.style.opacity = '1';
+
+            setTimeout(() => {
+                notification.style.transition = 'opacity 0.5s';
+                notification.style.opacity = '0';
+                setTimeout(() => {
+                    notification.style.display = 'none';
+                    notification.style.transition = '';
+                }, 500);
+            }, 2000);
+        }
+
+        prompts.forEach(prompt => {
+            const card = document.createElement('div');
+            card.className = 'card';
+
+            const promptText = document.createElement('div');
+            promptText.className = 'prompt-text';
+            promptText.textContent = prompt;
+
+            const copyButton = document.createElement('button');
+            copyButton.innerHTML = '<i class="fas fa-copy"></i> Copy';
+            copyButton.onclick = () => {
+                navigator.clipboard.writeText(prompt)
+                    .then(() => showNotification('Prompt copied to clipboard!'))
+                    .catch(err => console.error('Failed to copy: ', err));
+            };
+
+            card.appendChild(promptText);
+            card.appendChild(copyButton);
+            promptContainer.appendChild(card);
+        });
+    </script>
+</body>
+</html>
